@@ -1,15 +1,28 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import CharacterCanvas from './CharacterCanvas.jsx'
+import BrushWipe from './BrushWipe.jsx'
+import Desk from './Desk.jsx'
+import PaintPad from './PaintPad.jsx'
 
 // ✎ Edit your copy here. Empty fields ('') are hidden on the page until you fill them in.
 const content = {
   name: 'Sahana',
   fullName: 'Sahana C.',
   title: 'CMA Intermediate Qualified | Accounting & Taxation Professional',
-  eyebrow: 'Portfolio — 2026',
-  line: 'CMA Intermediate Qualified. Accounting & Taxation Professional.',
-  blurb: 'Cleared both CMA Intermediate groups in the first attempt. Now pursuing CMA Final while gaining practical experience in accounting and taxation.',
-  nav: [['About', '#about'], ['Experience', '#experience'], ['Skills', '#skills'], ['Art', '#art'], ['Contact', '#contact']],
+  eyebrow: 'CMA Intermediate Qualified · Evolving Artist',
+  line: ['By day, the ledger.', 'By heart, the canvas.'],
+  blurb: 'Cleared both CMA Intermediate groups in the first attempt. Now pursuing CMA Final, and painting whenever the books are closed.',
+  nav: [['The Ledger', '#ledger'], ['The Canvas', '#art'], ['Contact', '#contact']],
+  marquee: ['GST', 'Drawing', 'Tally', 'Painting', 'Bank reconciliation', 'Colour', 'TDS', 'Landscapes', 'Winman', 'Experiments', 'Tax audit', 'Imagination'],
+
+  // ✎ The closing "balance sheet": each row pairs one side of her with the other.
+  balance: [
+    ['Analytical and logical thinking', 'Imagination beyond conventional boundaries'],
+    ['Attention to detail', 'Observation of everyday details'],
+    ['Practical problem-solving', 'Experimentation with techniques and materials'],
+    ['Professional discipline', 'Freedom of expression'],
+    ['Continuous improvement', 'Every artwork, a step forward'],
+  ],
 
   contact: {
     location: 'Malappuram, Kerala, India',
@@ -37,7 +50,8 @@ const content = {
     {
       title: 'CMA Intermediate',
       org: 'The Institute of Cost Accountants of India (ICMAI)',
-      status: 'Both groups cleared, first attempt',
+      status: 'Both groups cleared,',
+      ring: 'first attempt',
       note: 'Strong academic foundation in financial accounting, cost accounting, corporate accounting, taxation, financial management and management accounting.',
     },
     // ✎ Hidden until a programme is added: fill in `programme` and `status` (current year).
@@ -142,7 +156,7 @@ const art = {
 function Section({ id, number, title, children }) {
   return (
     <section id={id} className="row">
-      <header className="row-head">
+      <header className="row-head" data-reveal>
         <span className="num">{number}</span>
         <h2>{title}</h2>
       </header>
@@ -151,20 +165,55 @@ function Section({ id, number, title, children }) {
   )
 }
 
+function Chapter({ book, title, line }) {
+  return (
+    <header className="chapter" data-reveal>
+      <p className="chapter-book">{book}</p>
+      <h2>{title}</h2>
+      <p className="chapter-line">{line}</p>
+    </header>
+  )
+}
+
+// A ledger list. Each entry gets a red auditor's tick, drawn when it scrolls into view.
 const Ledger = ({ items }) => (
-  <ul className="ledger">
-    {items.map(item => <li key={item}>{item}</li>)}
+  <ul className="ledger" data-reveal="draw">
+    {items.map((item, i) => (
+      <li key={item} style={{ '--i': i }}>
+        <span>{item}</span>
+        <svg className="tick" viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" d="M3 13 C 6 15, 8 18, 9 21 C 12 13, 16 8, 22 3" /></svg>
+      </li>
+    ))}
   </ul>
 )
+
+const Ring = ({ children }) => (
+  <span className="ring" data-reveal="draw">
+    {children}
+    <svg viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true">
+      <path pathLength="1" d="M34 12 C 84 -1, 176 0, 192 24 C 204 46, 124 59, 62 56 C 14 54, -6 36, 10 20 C 24 7, 76 3, 128 8" />
+    </svg>
+  </span>
+)
+
+const SWATCHES = ['#6fb7e8', '#d9365a', '#3f7d4c', '#a78fe0', '#a8532a']
 
 export default function App() {
   const [ready, setReady] = useState(false)
   const onReady = useCallback(() => setReady(true), [])
   const { contact } = content
 
+  useEffect(() => {
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) }
+    }), { rootMargin: '0px 0px -8% 0px' })
+    document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el))
+    return () => io.disconnect()
+  }, [])
+
   return (
     <>
-      <main className={`hero ${ready ? 'is-ready' : ''}`}>
+      <main id="top" className={`hero ${ready ? 'is-ready' : ''}`}>
         <div className="stage">
           <CharacterCanvas onReady={onReady} />
         </div>
@@ -178,36 +227,50 @@ export default function App() {
 
         <section className="copy">
           <p className="eyebrow rise" style={{ '--d': '.15s' }}>{content.eyebrow}</p>
-          <h1 className="rise" style={{ '--d': '.3s' }}>{content.name}</h1>
-          <p className="line rise" style={{ '--d': '.5s' }}>{content.line}</p>
+          <h1 aria-label={content.name}>
+            {[...content.name].map((letter, i) => (
+              <span className="letter" aria-hidden="true" key={i} style={{ '--d': `${.25 + i * .07}s` }}>{letter}</span>
+            ))}
+          </h1>
+          <p className="line rise" style={{ '--d': '.8s' }}>{content.line.map(part => <span key={part}>{part}</span>)}</p>
         </section>
 
-        <aside className="aside rise" style={{ '--d': '.7s' }}>
+        <aside className="aside rise" style={{ '--d': '1s' }}>
           <p>{content.blurb}</p>
-          <a className="cta" href="#about">View profile <span aria-hidden>→</span></a>
+          <a className="cta" href="#ledger">Open the ledger <span aria-hidden>→</span></a>
         </aside>
 
-        <footer className="foot rise" style={{ '--d': '.9s' }}>
+        <footer className="foot rise" style={{ '--d': '1.2s' }}>
           <span>Move your cursor</span>
           <span className="rule" />
-          <span>Scroll to read</span>
+          <span>Scroll</span>
         </footer>
       </main>
 
-      <div className="sheet">
-        <Section id="about" number="01" title="Profile">
-          <p className="lead">{content.profile.lead}</p>
-          <div className="prose">
+      <div className="marquee" aria-hidden="true">
+        <div className="marquee-track">
+          {[0, 1].map(copy => (
+            <span key={copy}>{content.marquee.map(word => <span key={word}>{word}<i>✦</i></span>)}</span>
+          ))}
+        </div>
+      </div>
+
+      <div id="ledger" className="sheet book">
+        <Chapter book="Book one" title="The Ledger" line="Everything here adds up." />
+
+        <Section id="about" number="Folio 01" title="Profile">
+          <p className="lead" data-reveal>{content.profile.lead}</p>
+          <div className="prose" data-reveal>
             {content.profile.body.map(p => <p key={p}>{p}</p>)}
           </div>
         </Section>
 
-        <Section id="education" number="02" title="Qualifications">
+        <Section id="education" number="Folio 02" title="Qualifications">
           {content.education.filter(q => q.note || q.programme).map(q => (
-            <article className="entry" key={q.title}>
+            <article className="entry" key={q.title} data-reveal>
               <div className="entry-top">
                 <h3>{q.title}</h3>
-                <span className="status">{q.status}</span>
+                <span className="status">{q.status}{q.ring && <> <Ring>{q.ring}</Ring></>}</span>
               </div>
               <p className="org">{q.org}</p>
               <p className="note">{q.note || q.programme}</p>
@@ -215,19 +278,19 @@ export default function App() {
           ))}
         </Section>
 
-        <Section id="experience" number="03" title="Experience">
+        <Section id="experience" number="Folio 03" title="Experience">
           <article className="entry">
-            <div className="entry-top">
+            <div className="entry-top" data-reveal>
               <h3>{content.experience.role}</h3>
               <span className="status">{content.experience.period}</span>
             </div>
-            <p className="note">{content.experience.summary}</p>
+            <p className="note" data-reveal>{content.experience.summary}</p>
             <h4>Key responsibilities and exposure</h4>
             <Ledger items={content.experience.duties} />
           </article>
         </Section>
 
-        <Section id="skills" number="04" title="Skills">
+        <Section id="skills" number="Folio 04" title="Skills">
           <div className="split">
             <div>
               <h4>Technical skills</h4>
@@ -240,78 +303,101 @@ export default function App() {
           </div>
         </Section>
 
-        <Section id="direction" number="05" title="Direction">
+        <Section id="direction" number="Folio 05" title="Direction">
           <h4>Career objective</h4>
-          <p className="lead">{content.objective[0]}</p>
-          <div className="prose"><p>{content.objective[1]}</p></div>
+          <p className="lead" data-reveal>{content.objective[0]}</p>
+          <div className="prose" data-reveal><p>{content.objective[1]}</p></div>
           <h4>Areas of professional interest</h4>
           <Ledger items={content.interests} />
         </Section>
+
+        <p className="turn" data-reveal>But the numbers are only half the story.</p>
       </div>
 
-      <div className="sheet studio">
-        <Section id="art" number="06" title="Creative Side">
-          <h4>{art.tagline}</h4>
-          <p className="lead">{art.lead}</p>
-          <div className="prose">
+      <BrushWipe />
+
+      <div id="art" className="sheet studio">
+        <Chapter book="Book two" title="The Canvas" line={art.tagline} />
+
+        <Section id="artist" number="Plate 01" title="About me">
+          <p className="lead" data-reveal>{art.lead}</p>
+          <div className="prose" data-reveal>
             {art.body.map(p => <p key={p}>{p}</p>)}
           </div>
         </Section>
 
-        <div className="gallery">
-          {[art.gallery.slice(0, 2), art.gallery.slice(2, 4), art.gallery.slice(4)].map((column, i) => (
-            <div className="gallery-col" key={i}>
-              {column.map(work => (
-                <figure key={work.src}>
-                  <img src={work.src} alt={work.alt} width={work.w} height={work.h} loading="lazy" />
-                  <figcaption>{work.title}</figcaption>
-                </figure>
-              ))}
-              {i === 2 && (
-                <figure className="studio-quote">
-                  <figcaption>Creative philosophy</figcaption>
-                  <blockquote>“{art.philosophy}”</blockquote>
-                </figure>
-              )}
-            </div>
-          ))}
-        </div>
+        <section id="work" className="wide">
+          <header className="row-head" data-reveal>
+            <span className="num">Plate 02</span>
+            <h2>On the desk</h2>
+          </header>
+          <Desk works={art.gallery} />
+        </section>
 
-        <div className="row studio-rest">
-          <div aria-hidden />
-          <div className="row-body">
-          <div className="split">
-            <div>
-              <h4>Creative interests</h4>
-              <Ledger items={art.interests} />
-            </div>
-            <div>
-              <h4>My creative approach</h4>
-              <dl className="approach">
-                {art.approach.map(([term, text]) => (
-                  <div key={term}>
-                    <dt>{term}</dt>
-                    <dd>{text}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </div>
+        <section id="approach" className="wide">
+          <header className="row-head" data-reveal>
+            <span className="num">Plate 03</span>
+            <h2>My creative approach</h2>
+          </header>
+          <dl className="approach">
+            {art.approach.map(([term, text], i) => (
+              <div key={term} data-reveal style={{ '--c': SWATCHES[i] }}>
+                <span className="dab" aria-hidden="true" />
+                <dt>{term}</dt>
+                <dd>{text}</dd>
+              </div>
+            ))}
+          </dl>
+          <h4 className="interests-head">Creative interests</h4>
+          <ul className="interests" data-reveal>
+            {art.interests.map(item => <li key={item}>{item}</li>)}
+          </ul>
+        </section>
 
-          <h4 className="vision">My vision</h4>
-          <p className="lead">{art.vision}</p>
-          </div>
-        </div>
+        <section id="yourturn" className="wide turn-yours">
+          <figure data-reveal>
+            <figcaption>Creative philosophy</figcaption>
+            <blockquote>“{art.philosophy}”</blockquote>
+          </figure>
+          <PaintPad />
+        </section>
+
+        <section className="wide vision-block" data-reveal>
+          <h4>My vision</h4>
+          <p>{art.vision}</p>
+        </section>
       </div>
+
+      <section id="balance" className="balance">
+        <div className="bs" data-reveal="draw">
+          <header>
+            <p className="chapter-book">Closing entry</p>
+            <h2>The Balance Sheet</h2>
+          </header>
+          <table>
+            <thead>
+              <tr><th scope="col">The Ledger</th><th scope="col">The Canvas</th></tr>
+            </thead>
+            <tbody>
+              {content.balance.map(([left, right]) => <tr key={left}><td>{left}</td><td>{right}</td></tr>)}
+            </tbody>
+            <tfoot>
+              <tr><td>{content.fullName}</td><td>{content.fullName}</td></tr>
+            </tfoot>
+          </table>
+          <div className="dbl" aria-hidden="true" />
+          <p className="stamp">Balanced</p>
+        </div>
+      </section>
 
       <footer id="contact" className="close">
         <div className="close-inner">
-          <figure>
+          <figure data-reveal>
             <figcaption>Professional philosophy</figcaption>
             <blockquote>“{content.philosophy}”</blockquote>
           </figure>
 
-          <div className="card">
+          <div className="card" data-reveal>
             <p className="card-name">{content.fullName}</p>
             <p className="card-title">{content.title}</p>
             <ul className="links">
