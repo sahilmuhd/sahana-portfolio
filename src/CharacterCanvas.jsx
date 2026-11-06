@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 
 /**
  * Cursor-tracking character. No CSS 3D, no <video> at runtime — just 64 pre-extracted
@@ -10,9 +9,6 @@ const TAU = Math.PI * 2
 const RESPONSE = 0.26        // per-frame (60fps) angular response -> ~35ms to settle
 const DEADZONE = 0.12        // fraction of the screen -> look straight at the visitor
 const DEADZONE_EXIT = 1.15   // hysteresis so the boundary never flickers
-const SEAL_DEADZONE = 70     // px around the corner seal -> look straight at the visitor
-const SEAL_SIZE = 192        // seal canvas resolution
-const SEAL_CROP = .54        // face crop for the seal, as a fraction of frame height
 
 // shortest-path circular lerp
 const lerpAngle = (a, b, t) => {
@@ -29,8 +25,6 @@ async function loadBitmap(url) {
 export default function CharacterCanvas({ onReady }) {
   const wrapRef = useRef(null)
   const canvasRef = useRef(null)
-  const sealRef = useRef(null)
-  const sealCanvasRef = useRef(null)
   const [meta, setMeta] = useState(null)
 
   useEffect(() => {
@@ -79,21 +73,9 @@ export default function CharacterCanvas({ onReady }) {
     const onScroll = () => { rect = canvas.getBoundingClientRect() }
     window.addEventListener('scroll', onScroll, { passive: true })
 
-    // Once the hero scrolls away she keeps watching from a small seal in the corner.
-    const seal = sealRef.current
-    const sealCtx = sealCanvasRef.current.getContext('2d', { alpha: false })
-    let sealOn = false
-    const heroIO = new IntersectionObserver(([entry]) => {
-      sealOn = entry.intersectionRatio < .3
-      seal.classList.toggle('show', sealOn)
-    }, { threshold: [0, .3, 1] })
-    heroIO.observe(wrapRef.current)
-
     const draw = (bmp, key) => {
       if (!bmp || drawn === key) return
       ctx.drawImage(bmp, 0, 0, cw, ch) // one opaque frame, nothing blended
-      const side = bmp.height * SEAL_CROP
-      sealCtx.drawImage(bmp, bmp.width * meta.anchor[0] - side / 2, bmp.height * meta.anchor[1] - side / 2, side, side, 0, 0, SEAL_SIZE, SEAL_SIZE)
       drawn = key
     }
 
@@ -105,12 +87,11 @@ export default function CharacterCanvas({ onReady }) {
 
       let bmp = center, key = 'c'
       if (!reduceMotion && pointer.active && loaded === N) {
-        const sealRect = sealOn ? seal.getBoundingClientRect() : null
-        const fx = sealRect ? sealRect.left + sealRect.width / 2 : rect.left + rect.width * meta.anchor[0]
-        const fy = sealRect ? sealRect.top + sealRect.height / 2 : rect.top + rect.height * meta.anchor[1]
+        const fx = rect.left + rect.width * meta.anchor[0]
+        const fy = rect.top + rect.height * meta.anchor[1]
         const dx = pointer.x - fx, dy = pointer.y - fy
         const dist = Math.hypot(dx, dy)
-        const R = sealRect ? SEAL_DEADZONE : DEADZONE * Math.max(window.innerWidth, window.innerHeight)
+        const R = DEADZONE * Math.max(window.innerWidth, window.innerHeight)
         inDead = dist < R * (inDead ? DEADZONE_EXIT : 1)
         // fast circular smoothing (frame-rate independent: equals 0.26 at 60fps)
         const k = 1 - Math.pow(1 - RESPONSE, dt / 16.667)
@@ -134,7 +115,7 @@ export default function CharacterCanvas({ onReady }) {
     })()
 
     return () => {
-      dead = true; cancelAnimationFrame(raf); ro.disconnect(); heroIO.disconnect()
+      dead = true; cancelAnimationFrame(raf); ro.disconnect()
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerdown', onMove)
       window.removeEventListener('scroll', onScroll)
@@ -146,16 +127,6 @@ export default function CharacterCanvas({ onReady }) {
   return (
     <div className="character" ref={wrapRef} style={meta ? { aspectRatio: `${meta.width} / ${meta.height}` } : undefined}>
       <canvas ref={canvasRef} aria-label="Portrait of Sahana, whose gaze follows your cursor" role="img" />
-      {createPortal(
-        <a ref={sealRef} className="seal" href="#top" aria-label="Back to top">
-          <canvas ref={sealCanvasRef} width={SEAL_SIZE} height={SEAL_SIZE} />
-          <svg className="seal-ring" viewBox="0 0 100 100" aria-hidden="true">
-            <defs><path id="seal-circle" d="M50 50 m-41 0 a41 41 0 1 1 82 0 a41 41 0 1 1 -82 0" /></defs>
-            <text><textPath href="#seal-circle">SAHANA C. • THE LEDGER • THE CANVAS •</textPath></text>
-          </svg>
-        </a>,
-        document.body,
-      )}
     </div>
   )
 }
