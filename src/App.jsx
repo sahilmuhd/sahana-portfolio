@@ -13,9 +13,9 @@ const content = {
 
   contact: {
     location: 'Malappuram, Kerala, India',
-    email: '',    // e.g. 'name@example.com'
+    email: 'sahanacsahanac36@gmail.com',
     phone: '',    // e.g. '+91 98765 43210'
-    linkedin: '', // full URL, e.g. 'https://www.linkedin.com/in/your-profile'
+    linkedin: 'https://www.linkedin.com/in/sahana-c-6951bb384',
   },
 
   profile: {
@@ -110,6 +110,14 @@ const art = {
     'For me, creativity is not limited to technical skills or perfect execution. It is about imagination, experimentation and the freedom to turn an idea into something meaningful.',
     'I enjoy observing details, experimenting with different artistic approaches and discovering beauty in ordinary things. I believe every creative attempt is an opportunity to learn, improve and express a different part of myself.',
     'I consider myself an evolving artist, always curious to explore new techniques, perspectives and possibilities.',
+  ],
+  // ✎ Images live in public/art. Captions are descriptive, so rename them to your own titles if you like.
+  gallery: [
+    { src: '/art/daisy-meadow.webp', w: 736, h: 731, title: 'Daisy meadow', alt: 'Painting on canvas of a winding path through a green meadow of white daisies under a blue and lilac sky' },
+    { src: '/art/sunset-miniatures.webp', w: 736, h: 916, title: 'Sunset miniatures', alt: 'Two small paintings of copper-brown sunset skies with silhouetted foliage, resting on an open book' },
+    { src: '/art/garden-path.webp', w: 736, h: 1040, title: 'Garden path', alt: 'Painting on canvas of a stone garden path and steps lined with red roses and colourful flowers' },
+    { src: '/art/pencil-sketch.webp', w: 736, h: 835, title: 'Pencil sketch', alt: 'Pencil sketch in a spiral notepad of a long-haired woman beside a small dog holding flowers, next to a tin of pencils' },
+    { src: '/art/strawberries.webp', w: 736, h: 1040, title: 'Strawberries', alt: 'Small painting of ripe strawberries and green leaves, taped to a wooden table with a hand adding details' },
   ],
   interests: [
     'Drawing and sketching',
@@ -248,8 +256,31 @@ export default function App() {
           <div className="prose">
             {art.body.map(p => <p key={p}>{p}</p>)}
           </div>
+        </Section>
 
-          <div className="split studio-lists">
+        <div className="gallery">
+          {[art.gallery.slice(0, 2), art.gallery.slice(2, 4), art.gallery.slice(4)].map((column, i) => (
+            <div className="gallery-col" key={i}>
+              {column.map(work => (
+                <figure key={work.src}>
+                  <img src={work.src} alt={work.alt} width={work.w} height={work.h} loading="lazy" />
+                  <figcaption>{work.title}</figcaption>
+                </figure>
+              ))}
+              {i === 2 && (
+                <figure className="studio-quote">
+                  <figcaption>Creative philosophy</figcaption>
+                  <blockquote>“{art.philosophy}”</blockquote>
+                </figure>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="row studio-rest">
+          <div aria-hidden />
+          <div className="row-body">
+          <div className="split">
             <div>
               <h4>Creative interests</h4>
               <Ledger items={art.interests} />
@@ -267,14 +298,10 @@ export default function App() {
             </div>
           </div>
 
-          <figure className="studio-quote">
-            <figcaption>Creative philosophy</figcaption>
-            <blockquote>“{art.philosophy}”</blockquote>
-          </figure>
-
-          <h4>My vision</h4>
+          <h4 className="vision">My vision</h4>
           <p className="lead">{art.vision}</p>
-        </Section>
+          </div>
+        </div>
       </div>
 
       <footer id="contact" className="close">

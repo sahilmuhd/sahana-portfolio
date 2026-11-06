@@ -104,13 +104,26 @@ h4 {
 
 /* ── Creative side: gold from the portrait's scarf ─────────────── */
 .studio { background: var(--gold); --line: rgba(43, 20, 16, .28); --muted: #4a2f28; --accent: #8f0400; }
-.studio-lists { margin-top: clamp(36px, 4vw, 56px); }
+.gallery {
+  max-width: 1240px; margin: clamp(4px, 1vw, 12px) auto 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); column-gap: clamp(14px, 2vw, 28px);
+}
+.gallery figure { break-inside: avoid; margin-bottom: clamp(20px, 2.4vw, 32px); }
+.gallery img { display: block; width: 100%; height: auto; }
+.gallery figcaption {
+  margin: .6rem 0 0; font: italic 400 19px/1.2 var(--serif); letter-spacing: 0; text-transform: none; color: var(--text);
+}
+.row.studio-rest { border-top: 0; padding-top: clamp(16px, 3vw, 40px); }
 .approach > div { padding-block: .72rem; border-top: 1px solid var(--line); }
 .approach { border-bottom: 1px solid var(--line); }
 .approach dt { font: italic 400 22px/1.2 var(--serif); }
 .approach dd { margin: .25rem 0 0; font-size: 14px; line-height: 1.55; color: var(--muted); }
-.studio-quote { margin-block: clamp(44px, 6vw, 80px); }
-.studio-quote figcaption { color: var(--accent); }
+.gallery .studio-quote { padding-top: clamp(12px, 2vw, 28px); }
+.gallery .studio-quote figcaption {
+  margin: 0 0 1.1rem; font: 400 11px/1.4 var(--sans); letter-spacing: .22em; text-transform: uppercase; color: var(--accent);
+}
+.studio-quote blockquote { font-size: clamp(25px, 2.5vw, 36px); }
+.vision { margin-top: clamp(44px, 6vw, 72px); }
 
 /* ── Closing / contact ─────────────────────────────────────────── */
 .close { background: var(--deep); color: var(--cream); padding: clamp(56px, 8vw, 112px) var(--gutter) 28px; scroll-margin-top: 0; }
@@ -147,6 +160,13 @@ a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
   .foot span:first-child { display: none; }
   .bar nav { gap: 14px; font-size: 10px; letter-spacing: .12em; }
   .row, .close-inner, .split { grid-template-columns: 1fr; }
+  .studio-rest > [aria-hidden] { display: none; }
+  .gallery { display: block; columns: 2; }
+  .gallery-col { display: contents; }
+  .gallery .studio-quote { column-span: all; padding-block: 16px 8px; }
+}
+@media (max-width: 360px) {
+  .bar nav { gap: 10px; font-size: 9px; letter-spacing: .06em; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
